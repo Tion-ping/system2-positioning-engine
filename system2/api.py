@@ -15,5 +15,5 @@ async def receive_event(event: CameraEvent, request: Request) -> dict:
 async def health(request: Request) -> dict:
     return {
         "status": "ok",
-        "cache_size": len(request.app.state.cache._q),
+        "cache_size": len(request.app.state.cache),
     }

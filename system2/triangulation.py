@@ -39,15 +39,24 @@ def gps_to_enu(lat: float, lon: float, alt: float,
 
 
 def enu_to_gps(enu: np.ndarray,
-               ref_lat: float, ref_lon: float, ref_alt: float) -> tuple[float, float, float]:
-    """Convert local ENU metres back to WGS84."""
+               ref_lat: float, ref_lon: float, ref_alt: float) -> tuple[float, float, float] | None:
+    """Convert local ENU metres back to WGS84.
+
+    Returns None on degenerate geometry (point too close to Earth's centre or
+    pole singularity) so the caller can skip rather than store NaN.
+    """
     ref_lat_r, ref_lon_r = np.radians(ref_lat), np.radians(ref_lon)
     R_inv = _enu_rotation(ref_lat_r, ref_lon_r).T
     ecef = _to_ecef(ref_lat_r, ref_lon_r, ref_alt) + R_inv @ enu
 
     x, y, z = ecef
-    lon = np.arctan2(y, x)
     p = np.sqrt(x ** 2 + y ** 2)
+    # p ≈ 0 → on the polar axis; lat formula collapses. Won't happen for
+    # ground-based deployments but guard so callers never see NaN.
+    if p < 1.0:
+        return None
+
+    lon = np.arctan2(y, x)
     lat = np.arctan2(z, p * (1 - _E2))
     for _ in range(5):
         N = _A / np.sqrt(1 - _E2 * np.sin(lat) ** 2)
@@ -55,7 +64,11 @@ def enu_to_gps(enu: np.ndarray,
 
     N = _A / np.sqrt(1 - _E2 * np.sin(lat) ** 2)
     alt = p / np.cos(lat) - N
-    return float(np.degrees(lat)), float(np.degrees(lon)), float(alt)
+
+    lat_d, lon_d, alt_f = float(np.degrees(lat)), float(np.degrees(lon)), float(alt)
+    if not (np.isfinite(lat_d) and np.isfinite(lon_d) and np.isfinite(alt_f)):
+        return None
+    return lat_d, lon_d, alt_f
 
 
 def intersect_rays(p1: np.ndarray, d1: np.ndarray,

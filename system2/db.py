@@ -25,6 +25,8 @@ def close() -> None:
 
 class _Conn:
     def __init__(self):
+        if _pool is None:
+            raise RuntimeError("db.init() must be called before any DB access")
         self._conn = _pool.getconn()
 
     def __enter__(self):
@@ -63,6 +65,16 @@ def _create_tables() -> None:
                     inserted_at TIMESTAMPTZ DEFAULT NOW()
                 )
             """)
+            # System 4 polls positions ordered by inserted_at; without this
+            # index it degrades to a seq scan on every tick.
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS positions_inserted_at_idx "
+                "ON positions(inserted_at)"
+            )
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS camera_events_timestamp_idx "
+                "ON camera_events(timestamp)"
+            )
     logger.info("DB tables ready")
 
 

@@ -23,3 +23,7 @@ class EventCache:
             events = list(self._q)
             self._q.clear()
             return events
+
+    def __len__(self) -> int:
+        with self._lock:
+            return len(self._q)

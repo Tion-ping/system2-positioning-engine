@@ -19,11 +19,11 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://droneadmin:localpassword@postgres:5432/dronedetection
-      MAX_DISTANCE_M: 500
-      TIME_WINDOW_S: 1.0
-      CACHE_SIZE: 300
+      MAX_DISTANCE_M: 3000
+      TIME_WINDOW_S: 10.0
+      CACHE_SIZE: 1000
       LOOP_INTERVAL_S: 0.5
-      DB_FLUSH_INTERVAL_S: 5.0
+      DB_FLUSH_INTERVAL_S: 60.0
     depends_on:
       postgres:
         condition: service_healthy

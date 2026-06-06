@@ -105,7 +105,10 @@ def _run_triangulation(cameras: dict[str, Camera], cache: EventCache,
                 if dist_i > settings.max_distance_m or dist_j > settings.max_distance_m:
                     continue
 
-                lat, lon, alt = enu_to_gps(point, ref_lat, ref_lon, ref_alt)
+                gps = enu_to_gps(point, ref_lat, ref_lon, ref_alt)
+                if gps is None:
+                    continue
+                lat, lon, alt = gps
                 positions.append(Position(
                     timestamp=timestamp,
                     lat=lat,
