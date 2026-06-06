@@ -1,0 +1,18 @@
+# Reference origin — the (0, 0, 0) point of the local ENU coordinate frame.
+# Set to the centroid of the camera array.
+reference_origin:
+  lat: 22.3193
+  lon: 114.1694
+  alt_m: 0.0
+
+# Each camera's GPS position and ID.
+# cam_id must match the cam_id field System 1 sends in POST /events.
+cameras:
+  - id: cam_01
+    lat: 22.3193
+    lon: 114.1694
+    alt_m: 15.0
+  - id: cam_02
+    lat: 22.3210   # ~190 m north of cam_01
+    lon: 114.1694
+    alt_m: 15.0
