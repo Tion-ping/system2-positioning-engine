@@ -67,11 +67,13 @@ def _run_triangulation(cameras: dict[str, Camera], cache: EventCache,
         return
 
     # group events by cam_id, keeping only cameras we know about
-    by_cam: dict[str, list] = {}
+    # store (detection, event_timestamp) so we can use the source timestamp
+    by_cam: dict[str, list[tuple]] = {}
     for event in events:
         if event.cam_id not in cameras:
             continue
-        by_cam.setdefault(event.cam_id, []).extend(event.detections)
+        for det in event.detections:
+            by_cam.setdefault(event.cam_id, []).append((det, event.timestamp))
 
     cam_ids = list(by_cam.keys())
     if len(cam_ids) < 2:
@@ -81,10 +83,10 @@ def _run_triangulation(cameras: dict[str, Camera], cache: EventCache,
     for id_i, id_j in itertools.combinations(cam_ids, 2):
         cam_i = cameras[id_i]
         cam_j = cameras[id_j]
-        timestamp = datetime.now(tz=timezone.utc)
 
-        for det_i in by_cam[id_i]:
-            for det_j in by_cam[id_j]:
+        for det_i, ts_i in by_cam[id_i]:
+            for det_j, ts_j in by_cam[id_j]:
+                timestamp = ts_i + (ts_j - ts_i) / 2
                 d1 = np.array(det_i.bearing_vector, dtype=float)
                 d2 = np.array(det_j.bearing_vector, dtype=float)
 
